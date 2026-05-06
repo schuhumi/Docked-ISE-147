@@ -1,5 +1,5 @@
 # Use an older 32-bit compatible Ubuntu base image
-FROM ubuntu:18.04
+FROM ubuntu:16.04
 
 # Set environment variables to avoid interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
@@ -8,6 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN dpkg --add-architecture i386 && \
     apt-get update && \
     apt-get install -y \
+    locales \
     build-essential \
     zlib1g:i386 \
     libncurses5:i386 \
@@ -52,6 +53,10 @@ RUN dpkg --add-architecture i386 && \
     make \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
+    locale-gen en_US.UTF-8 && \
+    /usr/sbin/update-locale LANG=en_US.UTF-8
+
 # Install OSS Cad Suite
 RUN wget https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2023-10-03/oss-cad-suite-linux-x64-20231003.tgz -O /tmp/oss-cad-suite.tgz && \
     tar -xzf /tmp/oss-cad-suite.tgz -C /opt/ && \
@@ -73,6 +78,7 @@ RUN echo "source /opt/Xilinx/14.7/ISE_DS/settings64.sh" >> /root/.bashrc && \
 
 # Create a wrapper script to source the Xilinx env/settings and OSS CAD Suite
 RUN echo '#!/bin/bash' > /opt/xilinx_run.sh && \
+    echo 'export LC_ALL=en_US.UTF-8' >> /opt/xilinx_run.sh && \
     echo 'source /opt/Xilinx/14.7/ISE_DS/settings64.sh' >> /opt/xilinx_run.sh && \
     echo 'source /opt/oss-cad-suite/environment' >> /opt/xilinx_run.sh && \
     echo 'export PATH=$PATH:/opt/Xilinx/14.7/ISE_DS/ISE/bin/lin64' >> /opt/xilinx_run.sh && \
